@@ -50,7 +50,7 @@ void MemoryWatcher::ParseLine(const std::string& line)
   m_values[line] = 0;
   m_addresses[line] = std::vector<u32>();
 
-  std::istringstream offsets(line);
+  std::stringstream offsets(line);
   offsets >> std::hex;
   u32 offset;
   while (offsets >> offset)
@@ -76,7 +76,7 @@ u32 MemoryWatcher::ChasePointer(const std::string& line)
 
 std::string MemoryWatcher::ComposeMessages()
 {
-  std::ostringstream message_stream;
+  std::stringstream message_stream;
   message_stream << std::hex;
 
   for (auto& entry : m_values)

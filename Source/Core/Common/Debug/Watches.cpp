@@ -104,7 +104,7 @@ std::vector<std::string> Watches::SaveToStrings() const
   std::vector<std::string> watches;
   for (const auto& watch : m_watches)
   {
-    std::ostringstream ss;
+    std::stringstream ss;
     ss << std::hex << watch.address << " " << watch.name;
     watches.push_back(ss.str());
   }
