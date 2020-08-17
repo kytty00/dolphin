@@ -172,13 +172,14 @@ Common::Debug::Threads PPCDebugInterface::GetThreads() const
   constexpr u32 ACTIVE_QUEUE_HEAD_ADDR = 0x800000dc;
   if (!PowerPC::HostIsRAMAddress(ACTIVE_QUEUE_HEAD_ADDR))
     return threads;
-  const u32 active_queue_head = PowerPC::HostRead_U32(ACTIVE_QUEUE_HEAD_ADDR);
-  if (!PowerPC::HostIsRAMAddress(active_queue_head))
+  u32 addr = PowerPC::HostRead_U32(ACTIVE_QUEUE_HEAD_ADDR);
+  if (!PowerPC::HostIsRAMAddress(addr))
     return threads;
 
-  auto active_thread = std::make_unique<Common::Debug::OSThreadView>(active_queue_head);
+  auto active_thread = std::make_unique<Common::Debug::OSThreadView>(addr);
   if (!active_thread->IsValid())
     return threads;
+  addr = active_thread->Data().thread_link.prev;
 
   const auto insert_threads = [&threads](u32 addr, auto get_next_addr) {
     while (addr != 0 && PowerPC::HostIsRAMAddress(addr))
@@ -191,13 +192,11 @@ Common::Debug::Threads PPCDebugInterface::GetThreads() const
     }
   };
 
-  const u32 prev_addr = active_thread->Data().thread_link.prev;
-  insert_threads(prev_addr, [](const auto& thread) { return thread.Data().thread_link.prev; });
+  insert_threads(addr, [](const auto& thread) { return thread.Data().thread_link.prev; });
   std::reverse(threads.begin(), threads.end());
-
-  const u32 next_addr = active_thread->Data().thread_link.next;
+  addr = active_thread->Data().thread_link.next;
   threads.emplace_back(std::move(active_thread));
-  insert_threads(next_addr, [](const auto& thread) { return thread.Data().thread_link.next; });
+  insert_threads(addr, [](const auto& thread) { return thread.Data().thread_link.next; });
 
   return threads;
 }
